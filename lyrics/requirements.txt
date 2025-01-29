@@ -1,3 +1,2 @@
 django
 mysqlclient
-django-cors-headers
