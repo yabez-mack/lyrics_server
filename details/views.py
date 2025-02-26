@@ -71,8 +71,7 @@ def validate_token(request):
             desc = cursor.description 
             value =  [dict(zip([col[0] for col in desc], row)) 
                     for row in cursor.fetchall()]
-            print(value)
-            print((token))
+            
             if len(value)==0:
                 user=value[0]
                 return JsonResponse({"data":user,"status":"success"})
@@ -186,8 +185,7 @@ def create_user(request):
                     
                     if increment_alphanumeric(value[0]['user_id']):
                         user_id=increment_alphanumeric(value[0]['user_id'])
-                        print(f"""INSERT INTO `song_book`.`user_details` (`user_id`, `username`,`password`,`full_name`,`created_date`,`created_by`  ,`status`, `user_type`, `image`) 
-                                    VALUES ('{user_id}','{username}','{password}', '{full_name}',CURRENT_DATE,'{created_by}',{status}, {user_type}, '{image}');""")
+                       
                         cursor.execute(f"""INSERT INTO `song_book`.`user_details` (`user_id`, `username`,`password`,`full_name`,`created_date`,`created_by`  ,`status`, `user_type`, `image`) 
                                     VALUES ('{user_id}','{username}','{password}', '{full_name}',CURRENT_DATE,'{created_by}',{status}, {user_type}, '{image}');""")
                         return JsonResponse({"message":"Uploaded Successfully","status":"success"})
