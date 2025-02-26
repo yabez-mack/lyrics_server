@@ -151,6 +151,7 @@ def get_image_casrol(request):
                 
             else:    
                 return JsonResponse({"message":"No Data Found","status":"failed"})
+            
 def create_user(request):
     try:
         body=json.loads(request.body)
@@ -203,6 +204,314 @@ def create_user(request):
     except:
         return JsonResponse({"status":"failed","message":"BAD REQUEST"})
          
+            
+def add_employee(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        reg_id = body.get('reg_id','')
+        name = body.get('name','')
+        adhar = body.get('adhar','')
+        designation = body.get('designation','')
+        email = body.get('email','')
+        education_qualification = body.get('education_qualification','')
+        field_name = body.get('field_name','')
+        date_of_birth = body.get('date_of_birth','')
+        address = body.get('address','')
+        people_group = body.get('people_group','')
+        language_known = body.get('language_known','')
+        date_of_joining = body.get('date_of_joining','')
+        contact_no = body.get('contact_no','')
+        martial_status = body.get('martial_status','')
+        spouse_name = body.get('spouse_name','')
+        date_of_marriage = body.get('date_of_marriage','')
+        spouse_occupation = body.get('spouse_occupation','')
+        father_name = body.get('father_name','')
+        mother_name = body.get('mother_name','')
+        child_1 = body.get('child_1','')
+        child_2 = body.get('child_2','')
+        child_3 = body.get('child_3','')
+        child_4 = body.get('child_4','')
+        child_5 = body.get('child_5','')
+        spouse_image = body.get('spouse_image','')
+        signature = body.get('signature','')
+        image = body.get('image','')
+        family_image = body.get('family_image','')
+        comment = body.get('comment','')
+        branch = body.get('branch','')
+        gender = body.get('gender','')
+        status = body.get('status',0)
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0):
+                if(reg_id and  name  and designation):                  
+                    
+                    cursor.execute(f"""INSERT INTO `song_book`.`employee` (`reg_id`,`name`,`adhar`,`designation`,`email`,`education_qualification`,`field_name`, `date_of_birth`, `address`, `people_group`,`language_known`,`date_of_joining`, `contact_no`,`martial_status`,`spouse_name`,`date_of_marriage`,`spouse_occupation`,`father_name`,`mother_name`,`child_1`,`child_2`,`child_3`,`child_4`,`child_5`,`spouse_image`,`signature`,`image`,`status`,`family_image`,`comment`,`branch`,`branch`) 
+                                    VALUES ('{reg_id}','{name}','{adhar}','{designation}','{email}','{education_qualification}','{field_name}','{date_of_birth}','{address}','{people_group}','{language_known}','{date_of_joining}','{contact_no}','{martial_status}','{spouse_name}','{date_of_marriage}','{spouse_occupation}','{father_name}','{mother_name}','{child_1}','{child_2}','{child_3}','{child_4}','{child_5}','{spouse_image}','{signature}','{image}',{status},'{family_image}','{comment}','{branch}','{gender}');""")
+                    return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                    
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+            
+def add_branch(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')        
+        branch_name = body.get('branch_name','')
+        status = body.get('status',0)
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0):
+                if(branch_name and  status ):                  
+                    cursor.execute(f"""SELECT * FROM song_book.branch where branch_name='{branch_name}' ;""")
+                    desc = cursor.description 
+                    values =  [dict(zip([col[0] for col in desc], row)) 
+                        for row in cursor.fetchall()]
+                    if(len(values)==0):
+                        
+                        cursor.execute(f"""INSERT INTO `song_book`.`branch` (`branch_name`,`status`) 
+                                        VALUES ('{branch_name}',{status});""")
+                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                    else:
+                        return JsonResponse({"message":"Branch Name Already Exists","status":"failed"})
+                        
+                    
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    
+def add_mission_field(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')        
+        field_name = body.get('field_name','')
+        branch_id = body.get('branch_id','')
+        status = body.get('status',0)
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0):
+                if(branch_id and  status and field_name ):                  
+                    cursor.execute(f"""SELECT * FROM song_book.mission_field where field_name='{field_name}' AND branch_id='{branch_id}' ;""")
+                    desc = cursor.description 
+                    values =  [dict(zip([col[0] for col in desc], row)) 
+                        for row in cursor.fetchall()]
+                    if(len(values)==0):
+                        
+                        cursor.execute(f"""INSERT INTO `song_book`.`mission_field` (`field_name`,`status`,`branch_id`) 
+                                    VALUES ('{field_name}',{status},'{branch_id}');""")
+                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                    else:
+                        return JsonResponse({"message":"Field Already Exists","status":"failed"})
+                        
+                    
+                    
+                   
+                    
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    
+def add_designation(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')        
+        designation = body.get('designation','')
+        status = body.get('status',0)
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0):
+                if(designation and  status ):                  
+                    cursor.execute(f"""SELECT * FROM song_book.designation where designation='{designation}' ;""")
+                    desc = cursor.description 
+                    values =  [dict(zip([col[0] for col in desc], row)) 
+                        for row in cursor.fetchall()]
+                    if(len(values)==0):
+                        
+                        cursor.execute(f"""INSERT INTO `song_book`.`designation` (`designation`,`status`) 
+                                    VALUES ('{designation}',{status});""")
+                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                    else:
+                        return JsonResponse({"message":"Field Already Exists","status":"failed"})
+                        
+                        
+                   
+                    
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+
+def get_latest_employee_id(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        private_connections = ConnectionHandler(settings.DATABASES)
+        db = router.db_for_write(model)
+        new_conn = private_connections[db]
+        cursor = new_conn.cursor()
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0):
+                cursor.execute(f"SELECT MAX(reg_id) as reg_id  FROM song_book.employee ")
+                desc = cursor.description 
+                values =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]    
+                         
+                if(values[0]['reg_id']!=None):
+                    s=values[0]['reg_id']
+                    match = re.search(r'(\d+)$', s)
+                    if match:
+                        numeric_part = match.group(1)
+                        prefix = s[:-len(numeric_part)] 
+                        new_numeric_part = int(numeric_part) + 1
+                        new_s = prefix + str(new_numeric_part).zfill(len(numeric_part))
+                        return JsonResponse({"data":new_s,"status":"success"})
+                    else:
+                        return JsonResponse({"data":'001',"status":"success"})
+                else:
+                    return JsonResponse({"data":'001',"status":"success"})
+            else:    
+                return JsonResponse({"message":"Invalid User","status":"failed"})
+        else:
+            return JsonResponse({"status":"failed","message":"Please Login"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    
+def get_employees(request):
+    private_connections = ConnectionHandler(settings.DATABASES)
+    db = router.db_for_write(model)
+    new_conn = private_connections[db]
+    cursor = new_conn.cursor()
+    req=json.loads(request.body)
+    cursor.execute(f"""SELECT emp.*,branch.branch_name,desig.designation_name FROM song_book.employee emp
+left join song_book.branch branch on emp.branch=branch.id
+left join song_book.designation desig on emp.designation=desig.id""")
+    desc = cursor.description 
+    value =  [dict(zip([col[0] for col in desc], row)) 
+            for row in cursor.fetchall()]
+    return JsonResponse({"data":value,"status":"success"})
+
+def get_branch(request):
+    private_connections = ConnectionHandler(settings.DATABASES)
+    db = router.db_for_write(model)
+    new_conn = private_connections[db]
+    cursor = new_conn.cursor()
+    req=json.loads(request.body)
+    
+    cursor.execute(f"SELECT * FROM song_book.branch ")
+    desc = cursor.description 
+    value =  [dict(zip([col[0] for col in desc], row)) 
+            for row in cursor.fetchall()]
+    return JsonResponse({"data":value,"status":"success"})
+
+def get_designation(request):
+    private_connections = ConnectionHandler(settings.DATABASES)
+    db = router.db_for_write(model)
+    new_conn = private_connections[db]
+    cursor = new_conn.cursor()
+    req=json.loads(request.body)
+    cursor.execute(f"SELECT * FROM song_book.designation ")
+    desc = cursor.description 
+    value =  [dict(zip([col[0] for col in desc], row)) 
+            for row in cursor.fetchall()]
+    return JsonResponse({"data":value,"status":"success"})
+
+def get_fields(request):
+    private_connections = ConnectionHandler(settings.DATABASES)
+    db = router.db_for_write(model)
+    new_conn = private_connections[db]
+    cursor = new_conn.cursor()
+    
+    body=json.loads(request.body)
+    branch_id=body.get('branch_id','')
+    if(branch_id):
+        cursor.execute(f"SELECT * FROM song_book.mission_field where branch_id={branch_id}")
+        desc = cursor.description 
+        value =  [dict(zip([col[0] for col in desc], row)) 
+                for row in cursor.fetchall()]
+        return JsonResponse({"data":value,"status":"success"})
+    else:
+        cursor.execute(f"SELECT * FROM song_book.mission_field")
+        desc = cursor.description 
+        value =  [dict(zip([col[0] for col in desc], row)) 
+                for row in cursor.fetchall()]
+        return JsonResponse({"data":value,"status":"success"})
+
+
+        
 def increment_alphanumeric(string):
     match = re.match(r"([a-zA-Z]+)(\d+)$", string)
     

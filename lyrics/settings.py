@@ -31,7 +31,8 @@ CORS_ALLOW_CREDENTIALS = True
 ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_WHITELIST =  ['http://localhost',
                           'http://127.0.0.1',
-                          'https://bcmmovement.in'
+                          'https://bcmmovement.in',
+                          'https://api.bcmmovement.in',
 ]
 
 # Application definition

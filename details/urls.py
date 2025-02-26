@@ -11,5 +11,14 @@ urlpatterns=[
     path('get_image_casrol',views.get_image_casrol),
     path('set_image_casrol',views.set_image_casrol),
     path('create_user',views.create_user),
+    path('get_employees',views.get_employees),
+    path('add_employee',views.add_employee),
+    path('get_latest_employee_id',views.get_latest_employee_id),
+    path('get_branch',views.get_branch),
+    path('get_designation',views.get_designation),
+    path('get_fields',views.get_fields),
+    path('add_designation',views.add_designation),
+    path('add_branch',views.add_branch),
+    path('add_mission_field',views.add_mission_field),
   
 ]
