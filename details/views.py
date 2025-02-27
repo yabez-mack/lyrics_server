@@ -72,10 +72,8 @@ def validate_token(request):
             value =  [dict(zip([col[0] for col in desc], row)) 
                     for row in cursor.fetchall()]
             
-            if len(value)==0:
-                user=value[0]
-                return JsonResponse({"data":user,"status":"success"})
-            elif len(value)>0:
+            
+            if len(value)>0:
                 user=value[0]
                 return JsonResponse({"data":user,"status":"success"})
             else:    
