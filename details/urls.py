@@ -20,5 +20,6 @@ urlpatterns=[
     path('add_designation',views.add_designation),
     path('add_branch',views.add_branch),
     path('add_mission_field',views.add_mission_field),
+    path('get_latest_song_no',views.get_latest_song_no),
   
 ]

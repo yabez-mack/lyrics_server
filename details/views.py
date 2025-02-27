@@ -405,10 +405,7 @@ def get_latest_employee_id(request):
     try:
         body=json.loads(request.body)
         token = body.get('token','')
-        private_connections = ConnectionHandler(settings.DATABASES)
-        db = router.db_for_write(model)
-        new_conn = private_connections[db]
-        cursor = new_conn.cursor()
+        
         if(token):
             private_connections = ConnectionHandler(settings.DATABASES)
             db = router.db_for_write(model)
@@ -437,6 +434,41 @@ def get_latest_employee_id(request):
                         return JsonResponse({"data":new_s,"status":"success"})
                     else:
                         return JsonResponse({"data":'001',"status":"success"})
+                else:
+                    return JsonResponse({"data":'001',"status":"success"})
+            else:    
+                return JsonResponse({"message":"Invalid User","status":"failed"})
+        else:
+            return JsonResponse({"status":"failed","message":"Please Login"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    
+def get_latest_song_no(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0):
+                cursor.execute(f"SELECT MAX(serial_no) as serial_no  FROM song_book.song ")
+                desc = cursor.description 
+                values =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]    
+                # print(values)
+                if(values[0]['serial_no']!=None):
+                    s=values[0]['serial_no']
+                    s=int(s)+1                    
+                    return JsonResponse({"data":s,"status":"success"})
                 else:
                     return JsonResponse({"data":'001',"status":"success"})
             else:    
