@@ -21,5 +21,8 @@ urlpatterns=[
     path('add_branch',views.add_branch),
     path('add_mission_field',views.add_mission_field),
     path('get_latest_song_no',views.get_latest_song_no),
+    path('get_year',views.get_year),
+    path('add_field_report',views.add_field_report),
+    path('get_field_report',views.get_field_report),
   
 ]

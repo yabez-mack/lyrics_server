@@ -245,13 +245,12 @@ def add_employee(request):
                 
             cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
             desc = cursor.description 
-            value =  [dict(zip([col[0] for col in desc], row)) 
+            values =  [dict(zip([col[0] for col in desc], row)) 
                     for row in cursor.fetchall()]
-
-            if(len(value)>0):
+            if(len(values)>0):
                 if(reg_id and  name  and designation):                  
                     
-                    cursor.execute(f"""INSERT INTO `song_book`.`employee` (`reg_id`,`name`,`adhar`,`designation`,`email`,`education_qualification`,`field_name`, `date_of_birth`, `address`, `people_group`,`language_known`,`date_of_joining`, `contact_no`,`martial_status`,`spouse_name`,`date_of_marriage`,`spouse_occupation`,`father_name`,`mother_name`,`child_1`,`child_2`,`child_3`,`child_4`,`child_5`,`spouse_image`,`signature`,`image`,`status`,`family_image`,`comment`,`branch`,`branch`) 
+                    cursor.execute(f"""INSERT INTO `song_book`.`employee` (`reg_id`,`name`,`adhar`,`designation`,`email`,`education_qualification`,`field_name`, `date_of_birth`, `address`, `people_group`,`language_known`,`date_of_joining`, `contact_no`,`martial_status`,`spouse_name`,`date_of_marriage`,`spouse_occupation`,`father_name`,`mother_name`,`child_1`,`child_2`,`child_3`,`child_4`,`child_5`,`spouse_image`,`signature`,`image`,`status`,`family_image`,`comment`,`branch`,`gender`) 
                                     VALUES ('{reg_id}','{name}','{adhar}','{designation}','{email}','{education_qualification}','{field_name}','{date_of_birth}','{address}','{people_group}','{language_known}','{date_of_joining}','{contact_no}','{martial_status}','{spouse_name}','{date_of_marriage}','{spouse_occupation}','{father_name}','{mother_name}','{child_1}','{child_2}','{child_3}','{child_4}','{child_5}','{spouse_image}','{signature}','{image}',{status},'{family_image}','{comment}','{branch}','{gender}');""")
                     return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     
@@ -339,8 +338,58 @@ def add_mission_field(request):
                                     VALUES ('{field_name}',{status},'{branch_id}');""")
                         return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     else:
-                        return JsonResponse({"message":"Field Already Exists","status":"failed"})
+                        return JsonResponse({"message":"Field Already Exists","status":"failed"})                    
+                    
+                    
+                   
+                    
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    
+def add_field_report(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')        
+        testimony = body.get('testimony','')
+        employee_id = body.get('employee_id','')
+        prayer_request = body.get('prayer_request','')
+        year = body.get('year','')
+        month = body.get('month','')
+        obstacles = body.get('obstacles','')
+        new_followers = body.get('new_followers','')
+        status = body.get('status',0)
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0):
+                if(month and  status and year ):                  
+                    cursor.execute(f"""SELECT * FROM song_book.field_report where employee_id='{employee_id}' AND year='{year}'  AND month='{month}' ;""")
+                    desc = cursor.description 
+                    values =  [dict(zip([col[0] for col in desc], row)) 
+                        for row in cursor.fetchall()]
+                    if(len(values)==0):
                         
+                        cursor.execute(f"""INSERT INTO `song_book`.`field_report` (`employee_id`,`status`,`year`,`month`,`testimony`,`prayer_request`,`obstacles`,`new_followers`) 
+                                                                            VALUES ('{employee_id}',{status},'{year}','{month}','{testimony}','{prayer_request}','{obstacles}','{new_followers}');""")
+                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                    else:
+                        return JsonResponse({"message":"Field Report Already Exists","status":"failed"})                
                     
                     
                    
@@ -370,18 +419,18 @@ def add_designation(request):
                 
             cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
             desc = cursor.description 
-            value =  [dict(zip([col[0] for col in desc], row)) 
+            valuee =  [dict(zip([col[0] for col in desc], row)) 
                     for row in cursor.fetchall()]
 
-            if(len(value)>0):
-                if(designation and  status ):                  
-                    cursor.execute(f"""SELECT * FROM song_book.designation where designation='{designation}' ;""")
+            if(len(valuee)>0):
+                if(designation and  status ):   
+                    cursor.execute(f"""SELECT * FROM song_book.designation where designation_name='{designation}' ;""")
                     desc = cursor.description 
                     values =  [dict(zip([col[0] for col in desc], row)) 
                         for row in cursor.fetchall()]
                     if(len(values)==0):
                         
-                        cursor.execute(f"""INSERT INTO `song_book`.`designation` (`designation`,`status`) 
+                        cursor.execute(f"""INSERT INTO `song_book`.`designation` (`designation_name`,`status`) 
                                     VALUES ('{designation}',{status});""")
                         return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     else:
@@ -478,6 +527,51 @@ def get_latest_song_no(request):
     except:
         return JsonResponse({"status":"failed","message":"BAD REQUEST"})
     
+def get_field_report(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        employee_id = body.get('employee_id','')
+        year = body.get('year','')
+        month = body.get('month','')
+        condition=''
+        if(employee_id):
+            condition+=f"AND fr.employee_id='{employee_id}'"
+        if(month):
+            condition+=f"AND fr.month='{month}'"
+        if(year):
+            condition+=f"AND fr.year='{year}'"
+        
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0):
+                cursor.execute(f"""SELECT fr.*,des.designation_name,br.branch_name,mis.field_name,emp.name,emp.gender,emp.email,emp.date_of_birth,emp.address,emp.contact_no,emp.date_of_joining,emp.martial_status,emp.spouse_name,emp.father_name,emp.reg_id,yr.year as year_name FROM song_book.field_report fr 
+                                    join song_book.employee emp on emp.id=fr.employee_id 
+                                    join designation des on emp.designation=des.id
+                                    join year yr on fr.year=yr.id
+                                    left join branch br on emp.branch=br.branch_name
+                                    left join mission_field mis on emp.field_name=mis.id
+                                    where fr.status=1 {condition} """)
+                desc = cursor.description 
+                value =  [dict(zip([col[0] for col in desc], row)) 
+                        for row in cursor.fetchall()]
+                return JsonResponse({"data":value,"status":"success"})
+            else:    
+                return JsonResponse({"message":"Invalid User","status":"failed"})
+        else:
+            return JsonResponse({"status":"failed","message":"Please Login"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    
 def get_employees(request):
     private_connections = ConnectionHandler(settings.DATABASES)
     db = router.db_for_write(model)
@@ -512,6 +606,18 @@ def get_designation(request):
     cursor = new_conn.cursor()
     req=json.loads(request.body)
     cursor.execute(f"SELECT * FROM song_book.designation ")
+    desc = cursor.description 
+    value =  [dict(zip([col[0] for col in desc], row)) 
+            for row in cursor.fetchall()]
+    return JsonResponse({"data":value,"status":"success"})
+
+def get_year(request):
+    private_connections = ConnectionHandler(settings.DATABASES)
+    db = router.db_for_write(model)
+    new_conn = private_connections[db]
+    cursor = new_conn.cursor()
+    req=json.loads(request.body)
+    cursor.execute(f"SELECT * FROM song_book.year; ")
     desc = cursor.description 
     value =  [dict(zip([col[0] for col in desc], row)) 
             for row in cursor.fetchall()]
