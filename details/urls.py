@@ -25,5 +25,6 @@ urlpatterns=[
     path('get_year',views.get_year),
     path('add_field_report',views.add_field_report),
     path('get_field_report',views.get_field_report),
+    path('upload_file',views.upload_file),
   
 ]

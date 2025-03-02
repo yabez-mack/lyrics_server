@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -58,6 +58,18 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+AWS_ACCESS_KEY_ID = 'AKIA5IJOXBB57HWSR6VY'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_DEFAULT_REGION ='eu-north-1'
+
+# Static files (CSS, JavaScript, images)
+AWS_S3_CUSTOM_DOMAIN = f"bcmmission.s3.amazonaws.com"
+
+# Enable static files to be served via S3 (for production)
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# Media files
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 ROOT_URLCONF = 'lyrics.urls'
 
 TEMPLATES = [

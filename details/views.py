@@ -8,6 +8,15 @@ from django.core import serializers
 from django.conf import settings
 from django.db.utils import ConnectionHandler
 import re
+import boto3
+from botocore.exceptions import NoCredentialsError
+from django.http import JsonResponse
+from django.core.files.storage import default_storage
+import tempfile
+from django.conf import settings
+import os
+import base64
+
 # import mysql.connector 
 # db = mysql.connector.connect(
 #     host="localhost",
@@ -92,21 +101,23 @@ def set_image_casrol(request):
         image_url = body.get('image_url','')
         status = body.get('status','')
         detail = body.get('detail','')
+        file = body.get('file','')
+        file_name = body.get('file_name','')
         type = body.get('type','')
         if(token):
             private_connections = ConnectionHandler(settings.DATABASES)
             db = router.db_for_write(model)
             new_conn = private_connections[db]
             cursor = new_conn.cursor()
-                
-            cursor.execute(f"""SELECT b.username,b.full_name,a.* FROM song_book.auth_tokens a
-                                join song_book.user_details b on a.user_id=b.id ;""")
+            # print(file,file_name,'/dashboard/casrol')
+            image_url=upload_file(file,file_name,'dashboard/casrol')
+            print(image_url) 
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
             desc = cursor.description 
-            value =  [dict(zip([col[0] for col in desc], row)) 
+            values =  [dict(zip([col[0] for col in desc], row)) 
                     for row in cursor.fetchall()]
-
-            if(any(d['token'] == token for d in value)):
-                if(title and  image_url and status and type):
+            if(len(values)>0):
+                if(title  and status and type):
                     
                     cursor.execute(f"""SELECT COUNT(*) AS count FROM `song_book`.`dashboard_casrol` WHERE title = '{title}' AND type={type};""")
                     desc = cursor.description 
@@ -854,12 +865,74 @@ def delete_song(request):
     except ValueError as e:
     # Invalid payload
         return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+
+def demo_upload(request):
+    payload = request.body
+    event = None
+    try:
+        json.loads(request.body)
+        req=json.loads(request.body)
+        id=req.get('id','')
+        album=req.get('album','')
+        artist=req.get('artist','')
+        image=req.get('image','')
+        index=req.get('index','')
+        language=req.get('language','')
+        name=req.get('name','')
+        serial_no=req.get('serial_no','')
+        song=req.get('song','')
+        video_url=req.get('video_url','')
+        
+        
+        cursor.execute(f"""UPDATE song_book.song SET album ='{album}',artist ='{artist}', image ='{image}', language ='{language}', name='{name}', serial_no ='{serial_no}', song ='{song}', video_url ='{video_url}' where id={id}""")
+        
+        return JsonResponse({"status":"success"})
+
+    except ValueError as e:
+    # Invalid payload
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
     
+def upload_file(image, image_name, path):
+    if image:
+        aws_access_key_id = settings.AWS_ACCESS_KEY_ID
+        aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
+        aws_default_region = settings.AWS_DEFAULT_REGION
+        
+        uploaded_image = base64.b64decode(image)  # Correct method to decode base64
 
+        session = boto3.Session()
+        s3 = session.client(
+            's3',
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=aws_default_region
+        )
 
-   
+        try:
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(uploaded_image)
+                temp_file_path = temp_file.name
 
+            bucket_name = 'bcmmission'
+            s3_object_key = f'{path}/{image_name}'
 
+            s3.upload_file(temp_file_path, bucket_name, s3_object_key)
+            os.remove(temp_file_path)  # Remove the temporary file after uploading
 
- 
-  
+            file_url = f'https://{bucket_name}.s3.{aws_default_region}.amazonaws.com/{s3_object_key}'
+            return file_url
+
+        except FileNotFoundError:
+            print("The file was not found.")
+            return ''
+
+        except NoCredentialsError:
+            print("Credentials not available.")
+            return ''
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return ''
+    else:
+        print('No image provided')
+        return ''
