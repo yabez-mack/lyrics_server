@@ -13,6 +13,7 @@ urlpatterns=[
     path('create_user',views.create_user),
     path('get_employees',views.get_employees),
     path('add_employee',views.add_employee),
+    path('update_employee',views.update_employee),
     path('get_latest_employee_id',views.get_latest_employee_id),
     path('get_branch',views.get_branch),
     path('get_designation',views.get_designation),

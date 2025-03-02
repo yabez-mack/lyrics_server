@@ -265,6 +265,107 @@ def add_employee(request):
     except:
         return JsonResponse({"status":"failed","message":"BAD REQUEST"})
             
+def update_employee(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        id = body.get('id','')
+        reg_id = body.get('reg_id','')
+        name = body.get('name','')
+        adhar = body.get('adhar','')
+        designation = body.get('designation','')
+        email = body.get('email','')
+        education_qualification = body.get('education_qualification','')
+        field_name = body.get('field_name','')
+        date_of_birth = body.get('date_of_birth','')
+        address = body.get('address','')
+        people_group = body.get('people_group','')
+        language_known = body.get('language_known','')
+        date_of_joining = body.get('date_of_joining','')
+        contact_no = body.get('contact_no','')
+        martial_status = body.get('martial_status','')
+        spouse_name = body.get('spouse_name','')
+        date_of_marriage = body.get('date_of_marriage','')
+        spouse_occupation = body.get('spouse_occupation','')
+        father_name = body.get('father_name','')
+        mother_name = body.get('mother_name','')
+        child_1 = body.get('child_1','')
+        child_2 = body.get('child_2','')
+        child_3 = body.get('child_3','')
+        child_4 = body.get('child_4','')
+        child_5 = body.get('child_5','')
+        spouse_image = body.get('spouse_image','')
+        signature = body.get('signature','')
+        image = body.get('image','')
+        family_image = body.get('family_image','')
+        comment = body.get('comment','')
+        branch = body.get('branch','')
+        gender = body.get('gender','')
+        status = body.get('status',0)
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            values =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+            if(len(values)>0):
+                if(reg_id and id and  name  and designation):                  
+                    
+                    cursor.execute(f"""UPDATE `song_book`.`employee`
+                    SET 
+                        `name` = '{name}',
+                        `adhar` = '{adhar}',
+                        `designation` = '{designation}',
+                        `email` = '{email}',
+                        `education_qualification` = '{education_qualification}',
+                        `field_name` = '{field_name}',
+                        `date_of_birth` = '{date_of_birth}',
+                        `address` = '{address}',
+                        `people_group` = '{people_group}',
+                        `language_known` = '{language_known}',
+                        `date_of_joining` = '{date_of_joining}',
+                        `contact_no` = '{contact_no}',
+                        `martial_status` = '{martial_status}',
+                        `spouse_name` = '{spouse_name}',
+                        `date_of_marriage` = '{date_of_marriage}',
+                        `spouse_occupation` = '{spouse_occupation}',
+                        `father_name` = '{father_name}',
+                        `mother_name` = '{mother_name}',
+                        `child_1` = '{child_1}',
+                        `child_2` = '{child_2}',
+                        `child_3` = '{child_3}',
+                        `child_4` = '{child_4}',
+                        `child_5` = '{child_5}',
+                        `spouse_image` = '{spouse_image}',
+                        `signature` = '{signature}',
+                        `image` = '{image}',
+                        `status` = {status},
+                        `family_image` = '{family_image}',
+                        `comment` = '{comment}',
+                        `branch` = '{branch}',
+                        `gender` = '{gender}',
+                        `reg_id` = '{reg_id}'
+                        
+                    WHERE 
+                        `id`={id}
+                        ;""")
+                    return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                    
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+            
 def add_branch(request):
     try:
         body=json.loads(request.body)
