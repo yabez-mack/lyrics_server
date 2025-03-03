@@ -58,9 +58,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+AWS_DEFAULT_REGION ='eu-north-1'
+
+
 AWS_ACCESS_KEY_ID = 'AKIA5IJOXBB57HWSR6VY'
 AWS_SECRET_ACCESS_KEY = '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'
-AWS_DEFAULT_REGION ='eu-north-1'
+
+# AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+# AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
 
 # Static files (CSS, JavaScript, images)
 AWS_S3_CUSTOM_DOMAIN = f"bcmmission.s3.amazonaws.com"

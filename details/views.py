@@ -109,9 +109,6 @@ def set_image_casrol(request):
             db = router.db_for_write(model)
             new_conn = private_connections[db]
             cursor = new_conn.cursor()
-            # print(file,file_name,'/dashboard/casrol')
-            image_url=upload_file(file,file_name,'dashboard/casrol')
-            print(image_url) 
             cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
             desc = cursor.description 
             values =  [dict(zip([col[0] for col in desc], row)) 
@@ -124,7 +121,7 @@ def set_image_casrol(request):
                     value =  [dict(zip([col[0] for col in desc], row)) 
                                 for row in cursor.fetchall()]
                     if value[0]['count']==0:
-                        
+                        image_url=upload_file(file,file_name,'dashboard/casrol')
                         cursor.execute(f"""INSERT INTO `song_book`.`dashboard_casrol` (`title`, `image`, `status`, `detail`, `type`) 
                                     VALUES ('{title}','{image_url}', {status}, '{detail}', {type});""")
                         return JsonResponse({"message":"Uploaded Successfully","status":"success"})
@@ -241,13 +238,21 @@ def add_employee(request):
         child_4 = body.get('child_4','')
         child_5 = body.get('child_5','')
         spouse_image = body.get('spouse_image','')
+        spouse_image_name = body.get('spouse_image_name','')
         signature = body.get('signature','')
+        signature_name = body.get('signature_name','')
         image = body.get('image','')
+        image_name = body.get('image_name','')
         family_image = body.get('family_image','')
+        family_image_name = body.get('family_image_name','')
         comment = body.get('comment','')
         branch = body.get('branch','')
         gender = body.get('gender','')
         status = body.get('status',0)
+        image_url=''
+        spouse_image_url=''
+        signature_url=''
+        family_image_url=''
         if(token):
             private_connections = ConnectionHandler(settings.DATABASES)
             db = router.db_for_write(model)
@@ -261,8 +266,21 @@ def add_employee(request):
             if(len(values)>0):
                 if(reg_id and  name  and designation):                  
                     
+                    if image:
+                        image_url=upload_file(image,image_name,'staff/employee')
+                    
+                    if spouse_image:
+                        spouse_image_url=upload_file(spouse_image,spouse_image_name,'staff/employee')
+                    
+                    if signature:
+                        signature_url=upload_file(signature,signature_name,'staff/employee')
+                    
+                    if family_image:
+                        family_image_url=upload_file(family_image,family_image_name,'staff/employee')
+                    
+                    
                     cursor.execute(f"""INSERT INTO `song_book`.`employee` (`reg_id`,`name`,`adhar`,`designation`,`email`,`education_qualification`,`field_name`, `date_of_birth`, `address`, `people_group`,`language_known`,`date_of_joining`, `contact_no`,`martial_status`,`spouse_name`,`date_of_marriage`,`spouse_occupation`,`father_name`,`mother_name`,`child_1`,`child_2`,`child_3`,`child_4`,`child_5`,`spouse_image`,`signature`,`image`,`status`,`family_image`,`comment`,`branch`,`gender`) 
-                                    VALUES ('{reg_id}','{name}','{adhar}','{designation}','{email}','{education_qualification}','{field_name}','{date_of_birth}','{address}','{people_group}','{language_known}','{date_of_joining}','{contact_no}','{martial_status}','{spouse_name}','{date_of_marriage}','{spouse_occupation}','{father_name}','{mother_name}','{child_1}','{child_2}','{child_3}','{child_4}','{child_5}','{spouse_image}','{signature}','{image}',{status},'{family_image}','{comment}','{branch}','{gender}');""")
+                                    VALUES ('{reg_id}','{name}','{adhar}','{designation}','{email}','{education_qualification}','{field_name}','{date_of_birth}','{address}','{people_group}','{language_known}','{date_of_joining}','{contact_no}','{martial_status}','{spouse_name}','{date_of_marriage}','{spouse_occupation}','{father_name}','{mother_name}','{child_1}','{child_2}','{child_3}','{child_4}','{child_5}','{spouse_image_url}','{signature_url}','{image_url}',{status},'{family_image_url}','{comment}','{branch}','{gender}');""")
                     return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     
                 else:
@@ -306,9 +324,13 @@ def update_employee(request):
         child_4 = body.get('child_4','')
         child_5 = body.get('child_5','')
         spouse_image = body.get('spouse_image','')
+        spouse_image_name = body.get('spouse_image_name','')
         signature = body.get('signature','')
+        signature_name = body.get('signature_name','')
         image = body.get('image','')
+        image_name = body.get('image_name','')
         family_image = body.get('family_image','')
+        family_image_name = body.get('family_image_name','')
         comment = body.get('comment','')
         branch = body.get('branch','')
         gender = body.get('gender','')
@@ -325,6 +347,17 @@ def update_employee(request):
                     for row in cursor.fetchall()]
             if(len(values)>0):
                 if(reg_id and id and  name  and designation):                  
+                    if image_name:
+                        image=upload_file(image,image_name,'staff/employee')
+                    
+                    if spouse_image_name:
+                        spouse_image=upload_file(spouse_image,spouse_image_name,'staff/employee')
+                    
+                    if signature_name:
+                        signature=upload_file(signature,signature_name,'staff/employee')
+                    
+                    if family_image_name:
+                        family_image=upload_file(family_image,family_image_name,'staff/employee')
                     
                     cursor.execute(f"""UPDATE `song_book`.`employee`
                     SET 
