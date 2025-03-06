@@ -931,7 +931,7 @@ def upload_file(image, image_name, path):
         aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
         aws_default_region = settings.AWS_DEFAULT_REGION
         
-        uploaded_image = base64.b64decode(image)  # Correct method to decode base64
+        uploaded_image = base64.b64decode(image)
 
         session = boto3.Session()
         s3 = session.client(
