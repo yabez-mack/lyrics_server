@@ -898,33 +898,156 @@ def delete_song(request):
     except ValueError as e:
     # Invalid payload
         return JsonResponse({"status":"failed","message":"BAD REQUEST"})
-
-def demo_upload(request):
-    payload = request.body
-    event = None
-    try:
-        json.loads(request.body)
-        req=json.loads(request.body)
-        id=req.get('id','')
-        album=req.get('album','')
-        artist=req.get('artist','')
-        image=req.get('image','')
-        index=req.get('index','')
-        language=req.get('language','')
-        name=req.get('name','')
-        serial_no=req.get('serial_no','')
-        song=req.get('song','')
-        video_url=req.get('video_url','')
-        
-        
-        cursor.execute(f"""UPDATE song_book.song SET album ='{album}',artist ='{artist}', image ='{image}', language ='{language}', name='{name}', serial_no ='{serial_no}', song ='{song}', video_url ='{video_url}' where id={id}""")
-        
-        return JsonResponse({"status":"success"})
-
-    except ValueError as e:
-    # Invalid payload
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
     
+def get_gallery_images(request):
+    private_connections = ConnectionHandler(settings.DATABASES)
+    db = router.db_for_write(model)
+    new_conn = private_connections[db]
+    cursor = new_conn.cursor()
+    req=json.loads(request.body)
+    cursor.execute(f"""SELECT gl.name as gallery_name,gi.* FROM song_book.gallery_images gi
+                        join gallery_list gl on gi.gallery_id=gl.id;""")
+    desc = cursor.description 
+    value =  [dict(zip([col[0] for col in desc], row)) 
+            for row in cursor.fetchall()]
+    return JsonResponse({"data":value,"status":"success"})
+   
+def get_gallery_list(request):
+    private_connections = ConnectionHandler(settings.DATABASES)
+    db = router.db_for_write(model)
+    new_conn = private_connections[db]
+    cursor = new_conn.cursor()
+    req=json.loads(request.body)
+    cursor.execute(f"SELECT * FROM song_book.gallery_list ")
+    desc = cursor.description 
+    value =  [dict(zip([col[0] for col in desc], row)) 
+            for row in cursor.fetchall()]
+    return JsonResponse({"data":value,"status":"success"})
+   
+def add_gallery_list(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')        
+        name = body.get('name','')
+        status = body.get('status',0)
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            valuee =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(valuee)>0):
+                if(name and  status ):   
+                    cursor.execute(f"""SELECT * FROM song_book.gallery_list where name='{name}' ;""")
+                    desc = cursor.description 
+                    values =  [dict(zip([col[0] for col in desc], row)) 
+                        for row in cursor.fetchall()]
+                    if(len(values)==0):
+                        
+                        cursor.execute(f"""INSERT INTO `song_book`.`gallery_list` (`name`,`status`) 
+                                    VALUES ('{name}',{status});""")
+                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                    else:
+                        return JsonResponse({"message":"Gallery Already Exists","status":"failed"})
+                        
+                        
+                   
+                    
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+ 
+def set_gallery_images(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        gallery_id = body.get('gallery_id','')
+        image_url = body.get('image_url','')
+        status = body.get('status','')
+        file = body.get('file',[])
+        file_name = body.get('file_name',[])
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            values =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+            if(len(values)>0):
+                if(len(file_name)>0  and status and len(file)>0):
+                    
+                        result = [{'file': name, 'file_name': value} for name, value in zip(file, file_name)]
+                        for item in result:
+                            image_url=upload_file(item['file'],item['file_name'],f'gallery/{gallery_id}')
+                            cursor.execute(f"""INSERT INTO `song_book`.`gallery_images` (`file_name`, `image_url`, `status`, `gallery_id`) 
+                                        VALUES ('{item['file_name']}','{image_url}', {status}, {gallery_id});""")
+                        
+                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                   
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+     
+def delete_gallery_images(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        id = body.get('id',[])
+        image = body.get('image',[])
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            values =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+            if(len(values)>0):
+                if(len(id)>0 and image ):
+                    
+                        result = [{'file': name, 'file_name': value} for name, value in zip(id, image)]
+                        
+                        for item in result:
+                            delete_file(item['file_name'])
+                            cursor.execute(f"""DELETE FROM `song_book`.`gallery_images` where id={item['file']};""")
+                            
+                        
+                        return JsonResponse({"message":"Deleted Successfully","status":"success"})
+                   
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+     
+     
 def upload_file(image, image_name, path):
     if image:
         aws_access_key_id = settings.AWS_ACCESS_KEY_ID
@@ -962,6 +1085,37 @@ def upload_file(image, image_name, path):
         except NoCredentialsError:
             print("Credentials not available.")
             return ''
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return ''
+    else:
+        print('No image provided')
+        return ''
+
+def delete_file(image):
+    if image:
+        aws_access_key_id = settings.AWS_ACCESS_KEY_ID
+        aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
+        aws_default_region = settings.AWS_DEFAULT_REGION
+        
+        
+        session = boto3.Session()
+        s3 = session.client(
+            's3',
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=aws_default_region
+        )
+
+        try:
+           
+
+            bucket_name = 'bcmmission'
+           
+            s3.delete_object(Bucket=bucket_name, Key=image)
+            return True
+
 
         except Exception as e:
             print(f"An error occurred: {e}")

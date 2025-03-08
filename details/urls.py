@@ -26,5 +26,10 @@ urlpatterns=[
     path('add_field_report',views.add_field_report),
     path('get_field_report',views.get_field_report),
     path('upload_file',views.upload_file),
+    path('add_gallery_list',views.add_gallery_list),
+    path('get_gallery_list',views.get_gallery_list),
+    path('set_gallery_images',views.set_gallery_images),
+    path('get_gallery_images',views.get_gallery_images),
+    path('delete_gallery_images',views.delete_gallery_images),
   
 ]
