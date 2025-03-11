@@ -101,9 +101,9 @@ WSGI_APPLICATION = 'lyrics.wsgi.application'
 DATABASES = {
     'default': {
     'ENGINE': 'django.db.backends.mysql',
-    'HOST':"songbook.c904u2u86td5.eu-north-1.rds.amazonaws.com",
-    'USER':"admin",
-    'PASSWORD':"Bcmm*2005",
+    'HOST':"localhost",
+    'USER':"root",
+    'PASSWORD':"rocktheworld",
     'NAME':'song_book',
     'PORT':'3306'
     }
