@@ -139,7 +139,7 @@ def set_image_casrol(request):
         return JsonResponse({"status":"failed","message":"BAD REQUEST"})
             
 def set_events(request):
-    try:
+    # try:
         body=json.loads(request.body)
         token = body.get('token','')
         title = body.get('title','')
@@ -162,14 +162,16 @@ def set_events(request):
             if(len(values)>0):
                 if(title  and status and event_start_date and event_end_date):
                     
-                    cursor.execute(f"""SELECT COUNT(*) AS count FROM `song_book`.`events` WHERE title = '{title}';""")
+                    cursor.execute(f"""SELECT COUNT(*) AS count FROM `song_book`.`events` WHERE event_name = '{title}';""")
                     desc = cursor.description 
                     value =  [dict(zip([col[0] for col in desc], row)) 
                                 for row in cursor.fetchall()]
                     if value[0]['count']==0:
                         image_url=upload_file(file,file_name,'dashboard/events')
-                        cursor.execute(f"""INSERT INTO `song_book`.`events` (`event_name`, `image`, `status`, `detail`, `event_start_date``, `event_end_date`) 
+                        
+                        cursor.execute(f"""INSERT INTO `song_book`.`events` (`event_name`, `image`, `status`, `detail`, `event_start_date`, `event_end_date`) 
                                                                     VALUES ('{title}','{image_url}', {status}, '{detail}', '{event_start_date}', '{event_end_date}' );""")
+                        
                         return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     else:
                         return JsonResponse({"message":"Title Already Exists","status":"failed"})
@@ -181,8 +183,8 @@ def set_events(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    # except:
+    #     return JsonResponse({"status":"failed","message":"BAD REQUEST"})
             
 def get_events(request):
    
