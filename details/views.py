@@ -139,7 +139,7 @@ def set_image_casrol(request):
         return JsonResponse({"status":"failed","message":"BAD REQUEST"})
             
 def set_events(request):
-    # try:
+    try:
         body=json.loads(request.body)
         token = body.get('token','')
         title = body.get('title','')
@@ -183,8 +183,8 @@ def set_events(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    # except:
-    #     return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
             
 def get_events(request):
    
