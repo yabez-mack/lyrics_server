@@ -169,7 +169,7 @@ def set_events(request):
                     if value[0]['count']==0:
                         image_url=upload_file(file,file_name,'dashboard/events')
                         cursor.execute(f"""INSERT INTO `song_book`.`events` (`event_name`, `image`, `status`, `detail`, `event_start_date``, `event_end_date`) 
-                                                                    VALUES ('{title}','{image_url}', {status}, '{detail}', {event_start_date}, {event_end_date});""")
+                                                                    VALUES ('{title}','{image_url}', {status}, '{detail}', '{event_start_date}', '{event_end_date}');""")
                         return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     else:
                         return JsonResponse({"message":"Title Already Exists","status":"failed"})
