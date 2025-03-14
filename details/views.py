@@ -138,6 +138,70 @@ def set_image_casrol(request):
     except:
         return JsonResponse({"status":"failed","message":"BAD REQUEST"})
             
+def set_events(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        title = body.get('title','')
+        image_url = body.get('image_url','')
+        status = body.get('status','')
+        detail = body.get('detail','')
+        file = body.get('file','')
+        event_start_date = body.get('event_start_date','')
+        event_end_date = body.get('event_end_date','')
+        file_name = body.get('file_name','')
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            values =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+            if(len(values)>0):
+                if(title  and status and event_start_date and event_end_date):
+                    
+                    cursor.execute(f"""SELECT COUNT(*) AS count FROM `song_book`.`events` WHERE title = '{title}';""")
+                    desc = cursor.description 
+                    value =  [dict(zip([col[0] for col in desc], row)) 
+                                for row in cursor.fetchall()]
+                    if value[0]['count']==0:
+                        image_url=upload_file(file,file_name,'dashboard/events')
+                        cursor.execute(f"""INSERT INTO `song_book`.`events` (`event_name`, `image`, `status`, `detail`, `event_start_date``, `event_end_date`) 
+                                                                    VALUES ('{title}','{image_url}', {status}, '{detail}', {event_start_date}, {event_end_date});""")
+                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                    else:
+                        return JsonResponse({"message":"Title Already Exists","status":"failed"})
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except:
+        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+            
+def get_events(request):
+   
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.events""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0):
+            
+                return JsonResponse({"data":value,"status":"success"})
+                
+            else:    
+                return JsonResponse({"message":"No Data Found","status":"failed"})
 def get_image_casrol(request):
    
             private_connections = ConnectionHandler(settings.DATABASES)
