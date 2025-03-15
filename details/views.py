@@ -16,6 +16,8 @@ import tempfile
 from django.conf import settings
 import os
 import base64
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 # import mysql.connector 
 # db = mysql.connector.connect(
@@ -44,12 +46,12 @@ def validate_user(request):
             db = router.db_for_write(model)
             new_conn = private_connections[db]
             cursor = new_conn.cursor()
-            cursor.execute(f"""SELECT * from song_book.user_details where username='{user_name}' and password='{password}' """)
+            password=encrypt_aes(password)
+            cursor.execute(f"""SELECT user_id,username,full_name,user_type from song_book.user_details where username='{user_name}' and password='{password}' """)
             
             desc = cursor.description 
             value =  [dict(zip([col[0] for col in desc], row)) 
                     for row in cursor.fetchall()]
-          
             if len(value)>0:
                 user_id=value[0]
                 token = ''.join([str(random.randint(0, 9)) for _ in range(20)])
@@ -62,8 +64,8 @@ def validate_user(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
             
 def validate_token(request):
     try:
@@ -75,8 +77,30 @@ def validate_token(request):
             new_conn = private_connections[db]
             cursor = new_conn.cursor()
                 
-            cursor.execute(f"""SELECT b.username,b.full_name,a.* FROM song_book.auth_tokens a
-                                join song_book.user_details b on a.user_id=b.user_id and a.token='{token}' ;""")
+            cursor.execute(f"""SELECT 
+                                    b.username, 
+                                    b.full_name, 
+                                    a.*, 
+                                    GROUP_CONCAT(
+                                        CASE 
+                                            WHEN b.user_type = 2 THEN ma.module_id 
+                                            ELSE m.id 
+                                        END 
+                                        
+                                        ORDER BY ma.module_id
+                                        ) AS module_access
+                                FROM song_book.auth_tokens a
+                                JOIN song_book.user_details b 
+                                    ON a.user_id = b.user_id 
+                                    AND a.token = '{token}'
+                                LEFT JOIN song_book.module_access ma 
+                                    ON a.user_id = ma.user_id 
+                                    AND b.user_type = 2
+                                LEFT JOIN song_book.modules m 
+                                    ON b.user_type != 2
+                                
+                                
+                                GROUP BY b.username, b.full_name, a.user_id;""")
             desc = cursor.description 
             value =  [dict(zip([col[0] for col in desc], row)) 
                     for row in cursor.fetchall()]
@@ -90,8 +114,8 @@ def validate_token(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
             
 def set_image_casrol(request):
     try:
@@ -135,8 +159,8 @@ def set_image_casrol(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
             
 def set_events(request):
     try:
@@ -183,8 +207,8 @@ def set_events(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
             
 def get_events(request):
    
@@ -225,55 +249,60 @@ def get_image_casrol(request):
             
 def create_user(request):
     try:
-        body=json.loads(request.body)
-        token = body.get('token','')
-        username = body.get('username','')
-        password = body.get('password','')
-        full_name = body.get('full_name','')
-        created_by = body.get('user_id','')
-        status = body.get('status','')
-        user_type = body.get('user_type','')
-        image = body.get('image','')
-        if(token):
+        # Parse the request body as JSON
+        body = json.loads(request.body)
+        
+        # Extract fields from the request
+        token = body.get('token', '')
+        username = body.get('username', '')
+        password = body.get('password', '')
+        full_name = body.get('full_name', '')
+        created_by = body.get('user_id', '')
+        status = body.get('status', '')
+        user_type = body.get('user_type', '')
+        image = body.get('image', '')
+        
+        if token:
+            # Handle database connection using Django's database router
             private_connections = ConnectionHandler(settings.DATABASES)
-            db = router.db_for_write(model)
+            db = router.db_for_write(model)  # This model should be defined earlier
             new_conn = private_connections[db]
             cursor = new_conn.cursor()
-                
-            cursor.execute(f"""SELECT b.username,b.full_name,a.* FROM song_book.auth_tokens a
-                                join song_book.user_details b on a.user_id=b.id ;""")
-            desc = cursor.description 
-            value =  [dict(zip([col[0] for col in desc], row)) 
-                    for row in cursor.fetchall()]
 
-            if(any(d['token'] == token for d in value)):
-                if(username and  password and status and user_type and full_name):
-                    cursor.execute(f"""SELECT * FROM `song_book`.`user_details`
-                                        ORDER BY id DESC
-                                        LIMIT 1;""")
-                    desc = cursor.description 
-                    value =  [dict(zip([col[0] for col in desc], row)) 
-                                for row in cursor.fetchall()]
-                    
-                    if increment_alphanumeric(value[0]['user_id']):
-                        user_id=increment_alphanumeric(value[0]['user_id'])
-                       
-                        cursor.execute(f"""INSERT INTO `song_book`.`user_details` (`user_id`, `username`,`password`,`full_name`,`created_date`,`created_by`  ,`status`, `user_type`, `image`) 
-                                    VALUES ('{user_id}','{username}','{password}', '{full_name}',CURRENT_DATE,'{created_by}',{status}, {user_type}, '{image}');""")
-                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
-                    else:
-                        return JsonResponse({"message":"Title Already Exists","status":"failed"})
+            # Query to validate token
+            cursor.execute("""SELECT * FROM song_book.auth_tokens WHERE token = %s;""", [token])
+            desc = cursor.description
+            values = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+
+            if values:
+                # All required fields are present
+                if username and password and status and user_type and full_name:
+                    encrypted_password = encrypt_aes(password)  # Encrypt password
+
+                    # Get the latest user_id for incrementing (assuming user_id follows a pattern)
+                    cursor.execute("""SELECT * FROM song_book.user_details ORDER BY id DESC LIMIT 1;""")
+                    desc = cursor.description
+                    value = [dict(zip([col[0] for col in desc], row)) for row in cursor.fetchall()]
+
+                    # Assuming you have an increment_alphanumeric function to generate a new user_id
+                    user_id = increment_alphanumeric(value[0]['user_id']) if value else 'user001'
+
+                    # Prepare SQL to insert new user details
+                    cursor.execute("""
+                        INSERT INTO song_book.user_details 
+                        (user_id, username, password, full_name, created_date, created_by, status, user_type, image) 
+                        VALUES (%s, %s, %s, %s, CURRENT_DATE, %s, %s, %s, %s);
+                    """, (user_id, username, encrypted_password, full_name, created_by, status, user_type, image))
+
+                    return JsonResponse({"message": "User Created Successfully", "status": "success"})
                 else:
-                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
-                
-            else:    
-                return JsonResponse({"message":"Please Login","status":"failed"})
-        
+                    return JsonResponse({"message": "Mandatory Fields Required", "status": "failed"})
+            else:
+                return JsonResponse({"message": "Invalid Token", "status": "failed"})
         else:
-            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
-         
+            return JsonResponse({"message": "Token is required", "status": "failed"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})     
             
 def add_employee(request):
     try:
@@ -357,8 +386,8 @@ def add_employee(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
             
 def update_employee(request):
     try:
@@ -473,8 +502,8 @@ def update_employee(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
             
 def add_branch(request):
     try:
@@ -516,8 +545,8 @@ def add_branch(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
     
 def add_mission_field(request):
     try:
@@ -562,8 +591,8 @@ def add_mission_field(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
     
 def add_field_report(request):
     try:
@@ -613,8 +642,8 @@ def add_field_report(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
     
 def add_designation(request):
     try:
@@ -658,8 +687,8 @@ def add_designation(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
 
 def get_latest_employee_id(request):
     try:
@@ -700,8 +729,8 @@ def get_latest_employee_id(request):
                 return JsonResponse({"message":"Invalid User","status":"failed"})
         else:
             return JsonResponse({"status":"failed","message":"Please Login"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
     
 def get_latest_song_no(request):
     try:
@@ -735,8 +764,8 @@ def get_latest_song_no(request):
                 return JsonResponse({"message":"Invalid User","status":"failed"})
         else:
             return JsonResponse({"status":"failed","message":"Please Login"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
     
 def get_field_report(request):
     try:
@@ -780,8 +809,162 @@ def get_field_report(request):
                 return JsonResponse({"message":"Invalid User","status":"failed"})
         else:
             return JsonResponse({"status":"failed","message":"Please Login"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
+    
+def save_module_access(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        user_id = body.get('user_id','')
+        module_id = body.get('module_id',[])
+        status = body.get('status',1)
+        
+        if(token and user_id):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0 ) :
+                cursor.execute(f"""DELETE FROM module_access
+                                    WHERE user_id = '{user_id}';""")
+                for item in module_id:
+                    cursor.execute(f"""INSERT INTO module_access (user_id, module_id, status)
+                                        VALUES ('{user_id}', '{item}', {status});""")
+                
+                return JsonResponse({"data":value,"status":"success"})
+            else:    
+                return JsonResponse({"message":"Invalid User","status":"failed"})
+        else:
+            return JsonResponse({"status":"failed","message":"Mandatory Fields Required"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
+    
+def get_users(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        
+        if(token ):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0 ) :
+                cursor.execute(f"""SELECT user_id,username,full_name,user_type from song_book.user_details where id!=1""")
+                
+                desc = cursor.description 
+                value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+                return JsonResponse({"data":value,"status":"success"})
+            else:    
+                return JsonResponse({"message":"Invalid User","status":"failed"})
+        else:
+            return JsonResponse({"status":"failed","message":"Mandatory Fields Required"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
+    
+def get_module_access(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+                
+            cursor.execute(f"""SELECT 
+                                m.id, 
+                                m.module_name,
+                                m.path
+                            FROM 
+                                modules m
+                            JOIN 
+                                auth_tokens atk ON atk.token = '{token}'
+                            JOIN 
+                                user_details ud ON ud.user_id = atk.user_id
+                            WHERE 
+                                (ud.user_type = 1) 
+                                OR (ud.user_type = 2 AND EXISTS (
+                                    SELECT 1 
+                                    FROM module_access ma 
+                                    WHERE ma.user_id = ud.user_id AND ma.module_id = m.id
+                                ));
+                            ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+            
+            return JsonResponse({"data":value,"status":"success"})
+            
+        else:
+            return JsonResponse({"status":"failed","message":"Please Login"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
+    
+def get_all_module_access(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        user_id = body.get('user_id','')
+        
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+            
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            value =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+
+            if(len(value)>0 ) :    
+                cursor.execute(f"""SELECT 
+                        m.id, 
+                        m.module_name,
+                        m.path,
+                        CASE 
+                            WHEN ud.user_type = 1 THEN 'Selected'  -- All modules are selected for user_type 1
+                            WHEN ud.user_type = 2 AND EXISTS (
+                                SELECT 1 
+                                FROM module_access ma 
+                                WHERE ma.user_id = ud.user_id 
+                                AND ma.module_id = m.id
+                            ) THEN true  -- Module is selected for user_type 2
+                            ELSE false  -- Module is not selected for user_type 2
+                        END AS access_status
+                    FROM 
+                        modules m
+                    
+                    JOIN 
+                        user_details ud ON ud.user_id = '{user_id}';
+                    """)
+                desc = cursor.description 
+                value =  [dict(zip([col[0] for col in desc], row)) 
+                        for row in cursor.fetchall()]
+                
+                return JsonResponse({"data":value,"status":"success"})
+            else:
+                return JsonResponse({"status":"failed","message":"Please Login"}) 
+        else:
+            return JsonResponse({"status":"failed","message":"Please Login"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
     
 def get_employees(request):
     private_connections = ConnectionHandler(settings.DATABASES)
@@ -1032,8 +1215,8 @@ def add_gallery_list(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
  
 def set_gallery_images(request):
     try:
@@ -1072,8 +1255,8 @@ def set_gallery_images(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
      
 def delete_gallery_images(request):
     try:
@@ -1110,8 +1293,8 @@ def delete_gallery_images(request):
         
         else:
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
-    except:
-        return JsonResponse({"status":"failed","message":"BAD REQUEST"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
      
      
 def upload_file(image, image_name, path):
@@ -1158,6 +1341,45 @@ def upload_file(image, image_name, path):
     else:
         print('No image provided')
         return ''
+def encrypt_aes(data: str) -> str:
+    # Convert the key to bytes (ensure the key is 16 bytes long for AES-128)
+    key = settings.USER_CIP_KEY.encode('utf-8')
+
+    # Convert the data to bytes
+    data_bytes = data.encode('utf-8')
+
+    # Create AES cipher object in ECB mode (no IV required)
+    cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
+    encryptor = cipher.encryptor()
+
+    # Ensure data is a multiple of block size (16 bytes for AES)
+    pad_length = 16 - len(data_bytes) % 16
+    padded_data = data_bytes + (chr(pad_length) * pad_length).encode('utf-8')
+
+    # Encrypt the data
+    encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
+
+    # Return encrypted data as a hex string (no IV used)
+    return encrypted_data.hex()  # Return as hex string for easy storage
+
+def decrypt_aes(encrypted_data: str) -> str:
+    # Convert the key to bytes (ensure the key is 16 bytes long for AES-128)
+    key = settings.USER_CIP_KEY.encode('utf-8')
+
+    # Convert the hexadecimal string back to bytes
+    encrypted_data_bytes = bytes.fromhex(encrypted_data)
+
+    # Create AES cipher object in ECB mode (no IV required)
+    cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=default_backend())
+    decryptor = cipher.decryptor()
+
+    # Decrypt the data
+    decrypted_data = decryptor.update(encrypted_data_bytes) + decryptor.finalize()
+
+    # Remove padding
+    pad_length = decrypted_data[-1]
+    return decrypted_data[:-pad_length].decode('utf-8') 
+
 
 def delete_file(image):
     if image:

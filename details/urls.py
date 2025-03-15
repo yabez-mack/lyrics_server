@@ -33,5 +33,9 @@ urlpatterns=[
     path('delete_gallery_images',views.delete_gallery_images),
     path('set_events',views.set_events),
     path('get_events',views.get_events),
+    path('get_module_access',views.get_module_access),
+    path('get_all_module_access',views.get_all_module_access),
+    path('save_module_access',views.save_module_access),
+    path('get_users',views.get_users),
   
 ]

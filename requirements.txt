@@ -2,3 +2,4 @@ django
 mysqlclient
 django-cors-headers
 boto3
+cryptography
