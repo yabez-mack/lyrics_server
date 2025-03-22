@@ -37,5 +37,6 @@ urlpatterns=[
     path('get_all_module_access',views.get_all_module_access),
     path('save_module_access',views.save_module_access),
     path('get_users',views.get_users),
+    path('set_employee_document',views.set_employee_document),
   
 ]

@@ -318,7 +318,6 @@ def add_employee(request):
         date_of_birth = body.get('date_of_birth','')
         address = body.get('address','')
         people_group = body.get('people_group','')
-        language_known = body.get('language_known','')
         date_of_joining = body.get('date_of_joining','')
         contact_no = body.get('contact_no','')
         martial_status = body.get('martial_status','')
@@ -326,12 +325,7 @@ def add_employee(request):
         date_of_marriage = body.get('date_of_marriage','')
         spouse_occupation = body.get('spouse_occupation','')
         father_name = body.get('father_name','')
-        mother_name = body.get('mother_name','')
-        child_1 = body.get('child_1','')
-        child_2 = body.get('child_2','')
-        child_3 = body.get('child_3','')
-        child_4 = body.get('child_4','')
-        child_5 = body.get('child_5','')
+        mother_name = body.get('mother_name','')       
         spouse_image = body.get('spouse_image','')
         spouse_image_name = body.get('spouse_image_name','')
         signature = body.get('signature','')
@@ -348,6 +342,17 @@ def add_employee(request):
         spouse_image_url=''
         signature_url=''
         family_image_url=''
+        language_speak = body.get('language_speak', '')
+        language_write = body.get('language_write', '')
+        spouse_adhar = body.get('spouse_adhar', '')
+        mut_member = body.get('mut_member', 0)  
+        mut_id = body.get('mut_id', '')
+        bank_name = body.get('bank_name', '')
+        account_name = body.get('account_name', '')
+        account_number = body.get('account_number', '')
+        ifsc = body.get('ifsc', '')
+        micr = body.get('micr', '')
+        blood_group = body.get('blood_group', '')
         if(token):
             private_connections = ConnectionHandler(settings.DATABASES)
             db = router.db_for_write(model)
@@ -374,8 +379,26 @@ def add_employee(request):
                         family_image_url=upload_file(family_image,family_image_name,'staff/employee')
                     
                     
-                    cursor.execute(f"""INSERT INTO `song_book`.`employee` (`reg_id`,`name`,`adhar`,`designation`,`email`,`education_qualification`,`field_name`, `date_of_birth`, `address`, `people_group`,`language_known`,`date_of_joining`, `contact_no`,`martial_status`,`spouse_name`,`date_of_marriage`,`spouse_occupation`,`father_name`,`mother_name`,`child_1`,`child_2`,`child_3`,`child_4`,`child_5`,`spouse_image`,`signature`,`image`,`status`,`family_image`,`comment`,`branch`,`gender`) 
-                                    VALUES ('{reg_id}','{name}','{adhar}','{designation}','{email}','{education_qualification}','{field_name}','{date_of_birth}','{address}','{people_group}','{language_known}','{date_of_joining}','{contact_no}','{martial_status}','{spouse_name}','{date_of_marriage}','{spouse_occupation}','{father_name}','{mother_name}','{child_1}','{child_2}','{child_3}','{child_4}','{child_5}','{spouse_image_url}','{signature_url}','{image_url}',{status},'{family_image_url}','{comment}','{branch}','{gender}');""")
+                    cursor.execute(f"""INSERT INTO `song_book`.`employee` 
+(
+    `reg_id`, `name`, `adhar`, `designation`, `email`, `education_qualification`, 
+    `field_name`, `date_of_birth`, `address`, `people_group`, `language_speak`, 
+    `language_write`, `date_of_joining`, `contact_no`, `martial_status`, `spouse_name`, 
+    `date_of_marriage`, `spouse_occupation`, `father_name`, `mother_name`, 
+    `spouse_adhar`, `mut_member`, `mut_id`, `bank_name`, `account_name`, 
+    `account_number`, `ifsc`, `micr`, `spouse_image`, `signature`, `image`, `status`, 
+    `family_image`, `comment`, `branch`, `gender`,`blood_group`
+) 
+VALUES 
+(
+    '{reg_id}', '{name}', '{adhar}', '{designation}', '{email}', '{education_qualification}', 
+    '{field_name}', '{date_of_birth}', '{address}', '{people_group}', '{language_speak}', 
+    '{language_write}', '{date_of_joining}', '{contact_no}', '{martial_status}', '{spouse_name}', 
+    '{date_of_marriage}', '{spouse_occupation}', '{father_name}', '{mother_name}', 
+    '{spouse_adhar}', {mut_member}, '{mut_id}', '{bank_name}', '{account_name}', 
+    '{account_number}', '{ifsc}', '{micr}', '{spouse_image_url}', '{signature_url}', '{image_url}', 
+    {status}, '{family_image_url}', '{comment}', '{branch}', '{gender}','{blood_group}'
+);""")
                     return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     
                 else:
@@ -404,7 +427,6 @@ def update_employee(request):
         date_of_birth = body.get('date_of_birth','')
         address = body.get('address','')
         people_group = body.get('people_group','')
-        language_known = body.get('language_known','')
         date_of_joining = body.get('date_of_joining','')
         contact_no = body.get('contact_no','')
         martial_status = body.get('martial_status','')
@@ -413,11 +435,6 @@ def update_employee(request):
         spouse_occupation = body.get('spouse_occupation','')
         father_name = body.get('father_name','')
         mother_name = body.get('mother_name','')
-        child_1 = body.get('child_1','')
-        child_2 = body.get('child_2','')
-        child_3 = body.get('child_3','')
-        child_4 = body.get('child_4','')
-        child_5 = body.get('child_5','')
         spouse_image = body.get('spouse_image','')
         spouse_image_name = body.get('spouse_image_name','')
         signature = body.get('signature','')
@@ -430,6 +447,17 @@ def update_employee(request):
         branch = body.get('branch','')
         gender = body.get('gender','')
         status = body.get('status',0)
+        language_speak = body.get('language_speak', '')
+        language_write = body.get('language_write', '')
+        spouse_adhar = body.get('spouse_adhar', '')
+        mut_member = body.get('mut_member', 0)  
+        mut_id = body.get('mut_id', '')
+        bank_name = body.get('bank_name', '')
+        account_name = body.get('account_name', '')
+        account_number = body.get('account_number', '')
+        ifsc = body.get('ifsc', '')
+        micr = body.get('micr', '')
+        blood_group = body.get('blood_group', '')
         if(token):
             private_connections = ConnectionHandler(settings.DATABASES)
             db = router.db_for_write(model)
@@ -455,43 +483,47 @@ def update_employee(request):
                         family_image=upload_file(family_image,family_image_name,'staff/employee')
                     
                     cursor.execute(f"""UPDATE `song_book`.`employee`
-                    SET 
-                        `name` = '{name}',
-                        `adhar` = '{adhar}',
-                        `designation` = '{designation}',
-                        `email` = '{email}',
-                        `education_qualification` = '{education_qualification}',
-                        `field_name` = '{field_name}',
-                        `date_of_birth` = '{date_of_birth}',
-                        `address` = '{address}',
-                        `people_group` = '{people_group}',
-                        `language_known` = '{language_known}',
-                        `date_of_joining` = '{date_of_joining}',
-                        `contact_no` = '{contact_no}',
-                        `martial_status` = '{martial_status}',
-                        `spouse_name` = '{spouse_name}',
-                        `date_of_marriage` = '{date_of_marriage}',
-                        `spouse_occupation` = '{spouse_occupation}',
-                        `father_name` = '{father_name}',
-                        `mother_name` = '{mother_name}',
-                        `child_1` = '{child_1}',
-                        `child_2` = '{child_2}',
-                        `child_3` = '{child_3}',
-                        `child_4` = '{child_4}',
-                        `child_5` = '{child_5}',
-                        `spouse_image` = '{spouse_image}',
-                        `signature` = '{signature}',
-                        `image` = '{image}',
-                        `status` = {status},
-                        `family_image` = '{family_image}',
-                        `comment` = '{comment}',
-                        `branch` = '{branch}',
-                        `gender` = '{gender}',
-                        `reg_id` = '{reg_id}'
-                        
-                    WHERE 
-                        `id`={id}
-                        ;""")
+                                    SET 
+                                        `name` = '{name}',
+                                        `adhar` = '{adhar}',
+                                        `designation` = '{designation}',
+                                        `email` = '{email}',
+                                        `education_qualification` = '{education_qualification}',
+                                        `field_name` = '{field_name}',
+                                        `date_of_birth` = '{date_of_birth}',
+                                        `address` = '{address}',
+                                        `people_group` = '{people_group}',
+                                        `language_speak` = '{language_speak}',
+                                        `language_write` = '{language_write}',
+                                        `date_of_joining` = '{date_of_joining}',
+                                        `contact_no` = '{contact_no}',
+                                        `martial_status` = '{martial_status}',
+                                        `spouse_name` = '{spouse_name}',
+                                        `date_of_marriage` = '{date_of_marriage}',
+                                        `spouse_occupation` = '{spouse_occupation}',
+                                        `father_name` = '{father_name}',
+                                        `mother_name` = '{mother_name}',
+                                        `spouse_adhar` = '{spouse_adhar}',
+                                        `mut_member` = {mut_member},
+                                        `mut_id` = '{mut_id}',
+                                        `bank_name` = '{bank_name}',
+                                        `account_name` = '{account_name}',
+                                        `account_number` = '{account_number}',
+                                        `ifsc` = '{ifsc}',
+                                        `micr` = '{micr}',
+                                        `spouse_image` = '{spouse_image}',
+                                        `signature` = '{signature}',
+                                        `image` = '{image}',
+                                        `status` = {status},
+                                        `family_image` = '{family_image}',
+                                        `comment` = '{comment}',
+                                        `branch` = '{branch}',
+                                        `gender` = '{gender}',
+                                        `reg_id` = '{reg_id}',
+                                        `blood_group` = '{blood_group}'
+                                    WHERE 
+                                        `id` = {id};
+                                    """)
                     return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     
                 else:
@@ -1244,6 +1276,48 @@ def set_gallery_images(request):
                             image_url=upload_file(item['file'],item['file_name'],f'gallery/{gallery_id}')
                             cursor.execute(f"""INSERT INTO `song_book`.`gallery_images` (`file_name`, `image_url`, `status`, `gallery_id`) 
                                         VALUES ('{item['file_name']}','{image_url}', {status}, {gallery_id});""")
+                        
+                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                   
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
+     
+def set_employee_document(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        employee_id = body.get('employee_id','')
+        user_id = body.get('user_id','')
+        url = body.get('url','')
+        status = body.get('status','')
+        file = body.get('file','')
+        file_name = body.get('file_name','')
+        title = body.get('title','')
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            values =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+            if(len(values)>0):
+                if(file_name and status and file):
+                    
+                        result = [{'file': file, 'file_name': file_name} for name, value in zip(file, file_name)]
+                        for item in result:
+                            image_url=upload_file(file,file_name,f'document/{employee_id}')
+                            cursor.execute(f"""INSERT INTO `song_book`.`gallery_images` (`document_name`, `url`, `status`, `employee_id`, `uploaded_by`) 
+                                        VALUES ('{title}','{image_url}', {status}, '{employee_id}','{user_id}');""")
                         
                         return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                    
