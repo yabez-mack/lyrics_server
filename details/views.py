@@ -1289,6 +1289,36 @@ def set_gallery_images(request):
             return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
     except Exception as e:
         return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
+ 
+def get_employee_document(request):
+    try:
+        private_connections = ConnectionHandler(settings.DATABASES)
+        db = router.db_for_write(model)
+        new_conn = private_connections[db]
+        cursor = new_conn.cursor()
+        body=json.loads(request.body)
+        employee_id = body.get('employee_id','')
+        token = body.get('token','')
+        
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            values =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+            if(len(values)>0):    
+                cursor.execute(f"""SELECT * FROM song_book.employee_documents where employee_id='{employee_id}';""")
+                desc = cursor.description 
+                value =  [dict(zip([col[0] for col in desc], row)) 
+                        for row in cursor.fetchall()]
+                return JsonResponse({"data":value,"status":"success"})
+        else:
+            return JsonResponse({"message":"Please Login","status":"success"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
      
 def set_employee_document(request):
     try:
@@ -1296,7 +1326,7 @@ def set_employee_document(request):
         token = body.get('token','')
         employee_id = body.get('employee_id','')
         user_id = body.get('user_id','')
-        url = body.get('url','')
+        image_url = body.get('url','')
         status = body.get('status','')
         file = body.get('file','')
         file_name = body.get('file_name','')
@@ -1313,10 +1343,8 @@ def set_employee_document(request):
             if(len(values)>0):
                 if(file_name and status and file):
                     
-                        result = [{'file': file, 'file_name': file_name} for name, value in zip(file, file_name)]
-                        for item in result:
-                            image_url=upload_file(file,file_name,f'document/{employee_id}')
-                            cursor.execute(f"""INSERT INTO `song_book`.`gallery_images` (`document_name`, `url`, `status`, `employee_id`, `uploaded_by`) 
+                        image_url=upload_file(file,file_name,f'document/{employee_id}')
+                        cursor.execute(f"""INSERT INTO `song_book`.`employee_documents` (`document_name`, `url`, `status`, `employee_id`, `uploaded_by`) 
                                         VALUES ('{title}','{image_url}', {status}, '{employee_id}','{user_id}');""")
                         
                         return JsonResponse({"message":"Uploaded Successfully","status":"success"})
@@ -1332,6 +1360,37 @@ def set_employee_document(request):
     except Exception as e:
         return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
      
+def delete_employee_document(request):
+    try:
+        body=json.loads(request.body)
+        token = body.get('token','')
+        id = body.get('id','')
+        file = body.get('file','')
+        if(token):
+            private_connections = ConnectionHandler(settings.DATABASES)
+            db = router.db_for_write(model)
+            new_conn = private_connections[db]
+            cursor = new_conn.cursor()
+            cursor.execute(f"""SELECT * FROM song_book.auth_tokens where token={token} ;""")
+            desc = cursor.description 
+            values =  [dict(zip([col[0] for col in desc], row)) 
+                    for row in cursor.fetchall()]
+            if(len(values)>0):
+                if(id and file ):                    
+                    delete_file(file)
+                    cursor.execute(f"""DELETE FROM `song_book`.`employee_documents` where id={id};""")                              
+                    return JsonResponse({"message":"Deleted Successfully","status":"success"})
+                else:
+                    return JsonResponse({"message":"Mandatory Fields Required","status":"failed"})
+                
+            else:    
+                return JsonResponse({"message":"Please Login","status":"failed"})
+        
+        else:
+            return JsonResponse({"message":"Please Enter Username And Password","status":"failed"})
+    except Exception as e:
+        return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
+          
 def delete_gallery_images(request):
     try:
         body=json.loads(request.body)
