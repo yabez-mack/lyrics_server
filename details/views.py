@@ -353,6 +353,7 @@ def add_employee(request):
         ifsc = body.get('ifsc', '')
         micr = body.get('micr', '')
         blood_group = body.get('blood_group', '')
+        children = body.get('children', [])
         if(token):
             private_connections = ConnectionHandler(settings.DATABASES)
             db = router.db_for_write(model)
@@ -399,6 +400,31 @@ VALUES
     '{account_number}', '{ifsc}', '{micr}', '{spouse_image_url}', '{signature_url}', '{image_url}', 
     {status}, '{family_image_url}', '{comment}', '{branch}', '{gender}','{blood_group}'
 );""")
+                    cursor.execute("SELECT LAST_INSERT_ID();")
+                    id = cursor.fetchone()[0]
+                    cursor.execute(f"""DELETE FROM `song_book`.`employee_children` WHERE emp_id='{id}'""")
+                    if len(children)>0:
+
+                        for child in children:
+                            child_name = child['child_name']
+                            dob = None if not child['dob'] else child['dob']  # If empty, set as None
+                            gender = None if not child['gender'] else child['gender']  # If empty, set as None
+                            education = None if not child['education'] else child['education']  # If empty, set as None
+                            marital_status = None if not child['marital_status'] else child['marital_status']  # If empty, set as None
+
+                            query = """INSERT INTO `employee_children` 
+                                        (child_name, dob, gender, education, marital_status, emp_id, status)
+                                        VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+                
+                            cursor.execute(query, (
+                                child_name, 
+                                dob, 
+                                gender, 
+                                education, 
+                                marital_status, 
+                                id, 
+                                status
+                            ))
                     return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     
                 else:
@@ -458,6 +484,7 @@ def update_employee(request):
         ifsc = body.get('ifsc', '')
         micr = body.get('micr', '')
         blood_group = body.get('blood_group', '')
+        children = body.get('children', [])
         if(token):
             private_connections = ConnectionHandler(settings.DATABASES)
             db = router.db_for_write(model)
@@ -524,6 +551,29 @@ def update_employee(request):
                                     WHERE 
                                         `id` = {id};
                                     """)
+                    cursor.execute(f"""DELETE FROM `song_book`.`employee_children` WHERE emp_id='{id}'""")
+                    if len(children)>0:
+
+                        for child in children:
+                            child_name = child['child_name']
+                            dob = None if not child['dob'] else child['dob']  # If empty, set as None
+                            gender = None if not child['gender'] else child['gender']  # If empty, set as None
+                            education = None if not child['education'] else child['education']  # If empty, set as None
+                            marital_status = None if not child['marital_status'] else child['marital_status']  # If empty, set as None
+
+                            query = """INSERT INTO `employee_children` 
+                                        (child_name, dob, gender, education, marital_status, emp_id, status)
+                                        VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+                
+                            cursor.execute(query, (
+                                child_name, 
+                                dob, 
+                                gender, 
+                                education, 
+                                marital_status, 
+                                id, 
+                                status
+                            ))
                     return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     
                 else:
@@ -1010,6 +1060,12 @@ left join song_book.designation desig on emp.designation=desig.id""")
     desc = cursor.description 
     value =  [dict(zip([col[0] for col in desc], row)) 
             for row in cursor.fetchall()]
+    for val in value:
+        cursor.execute(f"""SELECT * from song_book.employee_children where emp_id='{val['id']}'""")
+        desc = cursor.description 
+        values =  [dict(zip([col[0] for col in desc], row)) 
+                for row in cursor.fetchall()]
+        val['children']=values
     return JsonResponse({"data":value,"status":"success"})
 
 def get_branch(request):
