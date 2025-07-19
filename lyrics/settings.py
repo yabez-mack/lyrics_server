@@ -57,6 +57,17 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+# URL prefix for media files (uploaded user files)
+MEDIA_URL = '/media/'
+
+# Absolute path to the media folder on your server
+MEDIA_ROOT = '/home/server/files/media/'
+
+# URL prefix for static files (CSS, JS, etc)
+STATIC_URL = '/static/'
+
+# Absolute path to the static folder on your server
+STATIC_ROOT = '/home/server/files/static/'
 
 AWS_DEFAULT_REGION ='eu-north-1'
 

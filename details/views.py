@@ -1486,49 +1486,33 @@ def delete_gallery_images(request):
         return JsonResponse({"status": "failed", "message": f"Error: {str(e)}"})  
      
      
-def upload_file(image, image_name, path):
-    if image:
-        aws_access_key_id = settings.AWS_ACCESS_KEY_ID
-        aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
-        aws_default_region = settings.AWS_DEFAULT_REGION
-        
-        uploaded_image = base64.b64decode(image)
-
-        session = boto3.Session()
-        s3 = session.client(
-            's3',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=aws_default_region
-        )
-
+def upload_file(image_base64, image_name, path):
+    if image_base64:
         try:
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                temp_file.write(uploaded_image)
-                temp_file_path = temp_file.name
+            # Decode the base64 image
+            uploaded_image = base64.b64decode(image_base64)
 
-            bucket_name = 'bcmmission'
-            s3_object_key = f'{path}/{image_name}'
+            # Build the local file path
+            media_root = settings.MEDIA_ROOT  # typically set in settings.py
+            save_path = os.path.join(media_root, path)
 
-            s3.upload_file(temp_file_path, bucket_name, s3_object_key)
-            os.remove(temp_file_path)  # Remove the temporary file after uploading
+            os.makedirs(save_path, exist_ok=True)  # ensure the folder exists
 
-            file_url = f'https://{bucket_name}.s3.{aws_default_region}.amazonaws.com/{s3_object_key}'
+            file_path = os.path.join(save_path, image_name)
+
+            # Save the file
+            with open(file_path, 'wb') as f:
+                f.write(uploaded_image)
+
+            # Build the URL to access it
+            file_url = f'/media/{path}/{image_name}'
             return file_url
 
-        except FileNotFoundError:
-            print("The file was not found.")
-            return ''
-
-        except NoCredentialsError:
-            print("Credentials not available.")
-            return ''
-
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"Error saving image: {e}")
             return ''
     else:
-        print('No image provided')
+        print("No image provided")
         return ''
 def encrypt_aes(data: str) -> str:
     # Convert the key to bytes (ensure the key is 16 bytes long for AES-128)
