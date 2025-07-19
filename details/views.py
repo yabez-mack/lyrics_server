@@ -1489,28 +1489,34 @@ def delete_gallery_images(request):
 def upload_file(image_base64, image_name, path):
     if image_base64:
         try:
-            # Decode the base64 image
+            # Clean up file name: remove slashes or backslashes
+            image_name = os.path.basename(image_name)
+
             uploaded_image = base64.b64decode(image_base64)
 
-            # Build the local file path
-            media_root = settings.MEDIA_ROOT  # typically set in settings.py
-            save_path = os.path.join(media_root, path)
+            media_root = settings.MEDIA_ROOT
+            print("MEDIA_ROOT:", media_root)
 
-            os.makedirs(save_path, exist_ok=True)  # ensure the folder exists
+            save_path = os.path.join(media_root, path)
+            os.makedirs(save_path, exist_ok=True)
 
             file_path = os.path.join(save_path, image_name)
+            print("Saving file to:", file_path)
 
-            # Save the file
             with open(file_path, 'wb') as f:
                 f.write(uploaded_image)
 
-            # Build the URL to access it
+            if os.path.exists(file_path):
+                print("File saved successfully.")
+            else:
+                print("File not found after writing.")
+
             file_url = f'/media/{path}/{image_name}'
             return file_url
 
         except Exception as e:
             print(f"Error saving image: {e}")
-            return ''
+            raise
     else:
         print("No image provided")
         return ''
