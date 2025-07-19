@@ -148,7 +148,7 @@ def set_image_casrol(request):
                         image_url=upload_file(file,file_name,'dashboard/casrol')
                         cursor.execute(f"""INSERT INTO `song_book`.`dashboard_casrol` (`title`, `image`, `status`, `detail`, `type`) 
                                     VALUES ('{title}','{image_url}', {status}, '{detail}', {type});""")
-                        return JsonResponse({"message":"Uploaded Successfully","status":"success"})
+                        return JsonResponse({"message":"Uploaded Successfully","status":"success","image_url":image_url})
                     else:
                         return JsonResponse({"message":"Title Already Exists","status":"failed"})
                 else:
@@ -1496,6 +1496,7 @@ def upload_file(image_base64, image_name, path):
 
             media_root = settings.MEDIA_ROOT
             print("MEDIA_ROOT:", media_root)
+            return "MEDIA_ROOT:"+ media_root
 
             save_path = os.path.join(media_root, path)
             os.makedirs(save_path, exist_ok=True)
@@ -1508,18 +1509,20 @@ def upload_file(image_base64, image_name, path):
 
             if os.path.exists(file_path):
                 print("File saved successfully.")
+                
             else:
                 print("File not found after writing.")
+                return "File not found after writing."
 
             file_url = f'/media/{path}/{image_name}'
             return file_url
 
         except Exception as e:
             print(f"Error saving image: {e}")
-            raise
+            return f"Error saving image: {e}"
     else:
         print("No image provided")
-        return ''
+        return 'No Image'
 def encrypt_aes(data: str) -> str:
     # Convert the key to bytes (ensure the key is 16 bytes long for AES-128)
     key = settings.USER_CIP_KEY.encode('utf-8')
