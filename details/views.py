@@ -687,6 +687,9 @@ def add_field_report(request):
         month = body.get('month','')
         obstacles = body.get('obstacles','')
         new_followers = body.get('new_followers','')
+        testimony_font = body.get('testimony_font','')
+        prayer_request_font = body.get('prayer_request_font','')
+        obstacle_font = body.get('obstacle_font','')
         status = body.get('status',0)
         if(token):
             private_connections = ConnectionHandler(settings.DATABASES)
@@ -707,8 +710,14 @@ def add_field_report(request):
                         for row in cursor.fetchall()]
                     if(len(values)==0):
                         
-                        cursor.execute(f"""INSERT INTO `song_book`.`field_report` (`employee_id`,`status`,`year`,`month`,`testimony`,`prayer_request`,`obstacles`,`new_followers`) 
-                                                                            VALUES ('{employee_id}',{status},'{year}','{month}','{testimony}','{prayer_request}','{obstacles}','{new_followers}');""")
+                        cursor.execute(f"""
+                        INSERT INTO `song_book`.`field_report` 
+                        (`employee_id`, `status`, `year`, `month`, `testimony`, `prayer_request`, `obstacles`, `new_followers`, 
+                        `testimony_font`, `prayer_request_font`, `obstacle_font`)
+                        VALUES 
+                        ('{employee_id}', {status}, '{year}', '{month}', '{testimony}', '{prayer_request}', '{obstacles}', '{new_followers}',
+                        '{testimony_font}', '{prayer_request_font}', '{obstacle_font}');
+                            """)
                         return JsonResponse({"message":"Uploaded Successfully","status":"success"})
                     else:
                         return JsonResponse({"message":"Field Report Already Exists","status":"failed"})                
